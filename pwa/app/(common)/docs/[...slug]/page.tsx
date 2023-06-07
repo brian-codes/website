@@ -1,10 +1,21 @@
-import { getDocContentFromSlug } from "api/doc";
+import { getDocContentFromSlug, loadV2DocumentationNav } from "api/doc";
 import classNames from "classnames";
 import { versions, current } from "consts";
 
 export async function generateStaticParams() {
-  return [];
+  const slugs: string[] = [];
+  await Promise.all(
+    versions.map(async (version) => {
+      const nav = await loadV2DocumentationNav(version);
+      nav.map((navPart) => navPart.links.map((link) => slugs.push(link.link)));
+    })
+  );
+  return slugs.map((slug) => ({
+    slug: slug.replace("/docs/", "").split("/"),
+  }));
 }
+
+export const dynamicParams = false;
 
 export default async function Page({
   params: { slug },

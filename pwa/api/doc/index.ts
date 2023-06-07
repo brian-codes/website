@@ -10,6 +10,7 @@ import YAML from "yaml";
 import { marked } from "marked";
 import { cache } from "react";
 import { current } from "consts";
+import { DocLink } from "types";
 
 export const MyOctokit = Octokit.plugin(throttling);
 
@@ -24,7 +25,7 @@ const octokit = new MyOctokit({
     onRateLimit: (
       retryAfter: number,
       options: Options,
-      _octokit,
+      _octokit: any,
       retryCount: number
     ) => {
       console.warn(
@@ -97,7 +98,7 @@ export const loadV2DocumentationNav = cache(async (branch: string) => {
         ),
       }))
     );
-    return nav;
+    return nav as { title: string; basePath: string; links: DocLink[] }[];
   } catch (error) {
     console.error(error);
   }
