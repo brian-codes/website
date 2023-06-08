@@ -10,7 +10,7 @@ import YAML from "yaml";
 import { marked } from "marked";
 import { cache } from "react";
 import { current } from "consts";
-import { DocLink } from "types";
+import { Chapters } from "types";
 
 export const MyOctokit = Octokit.plugin(throttling);
 
@@ -76,12 +76,16 @@ export const loadV2DocumentationNav = cache(async (branch: string) => {
       path: "outline.yaml",
       ref: branch,
     });
-    const result = Buffer.from((data as any).content, "base64");
 
-    const navData = YAML.parse(result.toString());
+    if (!("content" in data)) return [];
+
+    const result = Buffer.from(data.content, "base64");
+
+    const navData: Chapters = YAML.parse(result.toString());
+
     const basePath = branch === current ? `/docs` : `/docs/${branch}`;
-    const nav = await Promise.all(
-      navData.chapters.map(async (part: any) => ({
+    return Promise.all(
+      navData.chapters.map(async (part) => ({
         title: part.title,
         basePath: `${basePath}/${part.path}`,
         links: await Promise.all(
@@ -98,11 +102,10 @@ export const loadV2DocumentationNav = cache(async (branch: string) => {
         ),
       }))
     );
-    return nav as { title: string; basePath: string; links: DocLink[] }[];
   } catch (error) {
     console.error(error);
+    return [];
   }
-  return [];
 });
 
 export const getDocContentFromSlug = cache(
