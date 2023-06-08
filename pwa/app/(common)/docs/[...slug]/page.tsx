@@ -3,16 +3,19 @@ import classNames from "classnames";
 import { versions, current } from "consts";
 
 export async function generateStaticParams() {
-  const slugs: string[] = [];
+  const slugs: { slug: string[] }[] = [];
   await Promise.all(
     versions.map(async (version) => {
-      const nav = await loadV2DocumentationNav(version);
-      nav.map((navPart) => navPart.links.map((link) => slugs.push(link.link)));
+      const navs = await loadV2DocumentationNav(version);
+      for (const nav of navs) {
+        for (const link of nav.links) {
+          slugs.push({ slug: link.link.replace("/docs/", "").split("/") });
+        }
+      }
     })
   );
-  return slugs.map((slug) => ({
-    slug: slug.replace("/docs/", "").split("/"),
-  }));
+
+  return slugs;
 }
 
 export const dynamicParams = false;
